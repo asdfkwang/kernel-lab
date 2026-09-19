@@ -1,4 +1,5 @@
 qemu/initramfs.cpio
 qemu/initramfs.cpio.gz
+rpi5/expected-version.txt
 *.log
 .DS_Store

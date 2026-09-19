@@ -22,9 +22,22 @@ done
 echo "Pi is online."
 
 echo "==> Verifying booted kernel"
-# TODO: compare against expected-version.txt recorded at deploy time.
-# A reachable Pi is NOT enough; SD fallback must be reported as failure.
 ssh -o BatchMode=yes "$TARGET" 'uname -a; cat /proc/version'
+
+VERSION_FILE="$LAB_ROOT/rpi5/expected-version.txt"
+if [[ -f "$VERSION_FILE" ]]; then
+    expected_release="$(awk '{print $3}' "$VERSION_FILE")"
+    booted_release="$(ssh -o BatchMode=yes "$TARGET" 'uname -r')"
+    echo "Expected release: $expected_release"
+    echo "Booted release:   $booted_release"
+    if [[ "$booted_release" != "$expected_release" ]]; then
+        echo "TEST FAILED: Pi is not running the deployed kernel (stale SD boot?)."
+        exit 1
+    fi
+    echo "Kernel version matches deployed build."
+else
+    echo "No $VERSION_FILE; skipping version check (run rpi5/deploy.sh first)."
+fi
 
 echo "==> Collecting KUnit results (TODO: parse PASS/FAIL, exit non-zero on failure)"
 ssh -o BatchMode=yes "$TARGET" 'dmesg | grep -E -m50 "KTAP|KUnit|^ok|not ok" || true'

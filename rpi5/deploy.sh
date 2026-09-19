@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publish freshly built Image + DTB into the TFTP directory. Skeleton.
+# Publish freshly built Image + DTB to the Pi's SD boot partition over SSH.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,31 +7,39 @@ LAB_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 source "$LAB_ROOT/env.sh"
 
-SRC_IMAGE="$KERNEL_OUT_RPI5/arch/arm64/boot/Image"
-# TODO: confirm exact DTB source path in current tree.
-SRC_DTB="$KERNEL_OUT_RPI5/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dtb"
+TARGET="$RPI_SSH_USER@$RPI_SSH_HOST"
+SRC_IMAGE="$KERNEL_OUT/arch/arm64/boot/Image"
+SRC_DTB="$KERNEL_OUT/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dtb"
+VERSION_FILE="$LAB_ROOT/rpi5/expected-version.txt"
 
 for f in "$SRC_IMAGE" "$SRC_DTB"; do
     if [[ ! -f "$f" ]]; then
         echo "Missing artifact: $f"
-        echo "Build first: ./scripts/build-rpi5-kernel.sh"
+        echo "Build first: ./scripts/build-kernel.sh"
         exit 1
     fi
 done
 
-mkdir -p "$RPI_TFTP_ROOT"
+echo "==> Deploying to $TARGET:$RPI_BOOT_DIR"
 
-echo "==> Deploying to $RPI_TFTP_ROOT (atomic rename)"
+scp -o BatchMode=yes "$SRC_IMAGE" "$TARGET:/tmp/Image.new"
+scp -o BatchMode=yes "$SRC_DTB" "$TARGET:/tmp/bcm2712-rpi-5-b.dtb.new"
 
-# TODO: also sync config.txt / cmdline.txt from rpi5/tftp/ if desired.
-cp "$SRC_IMAGE" "$RPI_TFTP_ROOT/Image.new"
-mv "$RPI_TFTP_ROOT/Image.new" "$RPI_TFTP_ROOT/Image"
+# Back up the running kernel, then atomically switch to the new one.
+ssh -o BatchMode=yes "$TARGET" "sudo sh -c '
+    set -e
+    if [ -f \"$RPI_BOOT_DIR/Image\" ]; then
+        cp \"$RPI_BOOT_DIR/Image\" \"$RPI_BOOT_DIR/Image.prev\"
+    fi
+    if [ -f \"$RPI_BOOT_DIR/bcm2712-rpi-5-b.dtb\" ]; then
+        cp \"$RPI_BOOT_DIR/bcm2712-rpi-5-b.dtb\" \"$RPI_BOOT_DIR/bcm2712-rpi-5-b.dtb.prev\"
+    fi
+    mv /tmp/Image.new \"$RPI_BOOT_DIR/Image\"
+    mv /tmp/bcm2712-rpi-5-b.dtb.new \"$RPI_BOOT_DIR/bcm2712-rpi-5-b.dtb\"
+'"
 
-cp "$SRC_DTB" "$RPI_TFTP_ROOT/bcm2712-rpi-5-b.dtb.new"
-mv "$RPI_TFTP_ROOT/bcm2712-rpi-5-b.dtb.new" "$RPI_TFTP_ROOT/bcm2712-rpi-5-b.dtb"
-
-# TODO: record build identity (e.g. sha256, localversion) for boot verification.
 uname_string="$(strings "$SRC_IMAGE" | grep -m1 'Linux version' || true)"
-echo "$uname_string" > "$RPI_TFTP_ROOT/expected-version.txt"
+echo "$uname_string" > "$VERSION_FILE"
 
-echo "Deployed."
+echo "Deployed. Expected: $uname_string"
+echo "Reboot the Pi to boot it (config.txt/cmdline.txt are managed separately, see rpi5/boot/)."

@@ -1,0 +1,5 @@
+# Development boot config for the SD boot partition (keep minimal).
+# Deployed alongside Image; see rpi5/README.md.
+arm_64bit=1
+kernel=Image
+# TODO: add RPi5-specific options only if required by current firmware/kernel.

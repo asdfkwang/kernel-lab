@@ -4,8 +4,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "[BUILD] Building ARM64 Raspberry Pi kernel..."
-"$SCRIPT_DIR/../scripts/build-rpi5-kernel.sh"
+echo "[BUILD] Building unified ARM64 Rust kernel..."
+"$SCRIPT_DIR/../scripts/build-kernel.sh"
 
 echo "[DEPLOY] Publishing Image + DTB..."
 "$SCRIPT_DIR/deploy.sh"

@@ -1,4 +1,0 @@
-# Development boot config served over TFTP (skeleton, keep minimal).
-arm_64bit=1
-kernel=Image
-# TODO: add RPi5-specific options only if required by current firmware/kernel.
