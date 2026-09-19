@@ -1,0 +1,4 @@
+qemu/initramfs.cpio
+qemu/initramfs.cpio.gz
+*.log
+.DS_Store
