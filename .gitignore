@@ -1,5 +1,8 @@
 qemu/initramfs.cpio
 qemu/initramfs.cpio.gz
+*.qcow2
+nohup.out
 rpi5/expected-version.txt
+env.local.sh
 *.log
 .DS_Store

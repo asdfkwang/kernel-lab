@@ -14,8 +14,9 @@ echo "  clients:    192.168.0.0/24 (Pi uses LAN DHCP, no fixed IP)"
 
 # TODO (requires root, run manually once):
 # 1. Install the NFS server:  apt install nfs-kernel-server
-# 2. Populate $RPI_NFS_ROOT (initially: copy of a known-good Pi rootfs).
+# 2. Populate $RPI_NFS_ROOT (initially: copy of a known-good Pi rootfs;
+#    kernel modules are installed there by scripts/build-kernel.sh).
 # 3. Export it to the LAN, e.g. in /etc/exports:
-#      /srv/nfs/rpi5-root  192.168.0.0/24(rw,sync,no_subtree_check,no_root_squash)
+#      /home/kwang/nfs/rpi5-root  192.168.0.0/24(rw,sync,no_subtree_check,no_root_squash)
 # 4. Apply:  exportfs -ra ; systemctl enable --now nfs-server
 # 5. Open the firewall for NFS on the LAN if one is active.

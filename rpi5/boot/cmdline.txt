@@ -1,1 +1,1 @@
-console=serial0,115200 root=/dev/nfs nfsroot=192.168.0.27:/srv/nfs/rpi5-root,vers=3 rw ip=dhcp rootwait
+console=serial0,115200 root=/dev/nfs nfsroot=192.168.0.27:/home/kwang/nfs/rpi5-root,vers=3 rw ip=dhcp rootwait
